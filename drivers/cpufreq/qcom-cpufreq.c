@@ -33,6 +33,7 @@
 #include <linux/of.h>
 #include <soc/qcom/cpufreq.h>
 #include <trace/events/power.h>
+#include <linux/sched/rt.h>
 
 #include <soc/qcom/acpuclock.h>
 
