@@ -83,13 +83,22 @@ void dbs_check_cpu(struct dbs_data *dbs_data, int cpu)
 	/* Get Absolute Load (in terms of freq for ondemand gov) */
 	for_each_cpu(j, policy->cpus) {
 		struct cpu_dbs_common_info *j_cdbs;
-		u64 cur_wall_time, cur_idle_time, cur_iowait_time;
-		unsigned int idle_time, wall_time, iowait_time;
+		u64 cur_wall_time, cur_idle_time;
+		unsigned int idle_time, wall_time;
 		unsigned int load;
+		int io_busy = 0;
 
 		j_cdbs = dbs_data->get_cpu_cdbs(j);
 
-		cur_idle_time = get_cpu_idle_time(j, &cur_wall_time, 0);
+		/*
+		 * For the purpose of ondemand, waiting for disk IO is
+		 * an indication that you're performance critical, and
+		 * not that the system is actually idle. So do not add
+		 * the iowait time to the cpu idle time.
+		 */
+		if (dbs_data->governor == GOV_ONDEMAND)
+			io_busy = od_tuners->io_is_busy;
+		cur_idle_time = get_cpu_idle_time(j, &cur_wall_time, io_busy);
 
 		wall_time = (unsigned int)
 			(cur_wall_time - j_cdbs->prev_cpu_wall);
@@ -115,29 +124,6 @@ void dbs_check_cpu(struct dbs_data *dbs_data, int cpu)
 			cdbs->prev_cpu_nice =
 				kcpustat_cpu(j).cpustat[CPUTIME_NICE];
 			idle_time += jiffies_to_usecs(cur_nice_jiffies);
-		}
-
-		if (dbs_data->governor == GOV_ONDEMAND) {
-			struct od_cpu_dbs_info_s *od_j_dbs_info =
-				dbs_data->get_cpu_dbs_info_s(cpu);
-
-			cur_iowait_time = get_cpu_iowait_time_us(j,
-					&cur_wall_time);
-			if (cur_iowait_time == -1ULL)
-				cur_iowait_time = 0;
-
-			iowait_time = (unsigned int) (cur_iowait_time -
-					od_j_dbs_info->prev_cpu_iowait);
-			od_j_dbs_info->prev_cpu_iowait = cur_iowait_time;
-
-			/*
-			 * For the purpose of ondemand, waiting for disk IO is
-			 * an indication that you're performance critical, and
-			 * not that the system is actually idle. So subtract the
-			 * iowait time from the cpu idle time.
-			 */
-			if (od_tuners->io_is_busy && idle_time >= iowait_time)
-				idle_time -= iowait_time;
 		}
 
 		if (unlikely(!wall_time || wall_time < idle_time))
@@ -186,6 +172,7 @@ int cpufreq_governor_dbs(struct dbs_data *dbs_data,
 	struct cs_dbs_tuners *cs_tuners = dbs_data->tuners;
 	struct cpu_dbs_common_info *cpu_cdbs;
 	unsigned int *sampling_rate, latency, ignore_nice, j, cpu = policy->cpu;
+	int io_busy = 0;
 	int rc;
 
 	cpu_cdbs = dbs_data->get_cpu_cdbs(cpu);
@@ -200,6 +187,7 @@ int cpufreq_governor_dbs(struct dbs_data *dbs_data,
 		sampling_rate = &od_tuners->sampling_rate;
 		ignore_nice = od_tuners->ignore_nice;
 		od_ops = dbs_data->gov_ops;
+		io_busy = od_tuners->io_is_busy;
 	}
 
 	switch (event) {
@@ -215,7 +203,7 @@ int cpufreq_governor_dbs(struct dbs_data *dbs_data,
 
 			j_cdbs->cur_policy = policy;
 			j_cdbs->prev_cpu_idle = get_cpu_idle_time(j,
-					&j_cdbs->prev_cpu_wall, 0);
+					       &j_cdbs->prev_cpu_wall, io_busy);
 			if (ignore_nice)
 				j_cdbs->prev_cpu_nice =
 					kcpustat_cpu(j).cpustat[CPUTIME_NICE];
