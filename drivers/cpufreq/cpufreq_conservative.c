@@ -44,9 +44,9 @@ static struct cs_dbs_tuners cs_tuners = {
 
 /*
  * Every sampling_rate, we check, if current idle time is less than 20%
- * (default), then we try to increase frequency Every sampling_rate *
- * sampling_down_factor, we check, if current idle time is more than 80%, then
- * we try to decrease frequency
+ * (default), then we try to increase frequency. Every sampling_rate *
+ * sampling_down_factor, we check, if current idle time is more than 80%
+ * (default), then we try to decrease frequency
  *
  * Any frequency increase takes it to the maximum frequency. Frequency reduction
  * happens at minimum steps of 5% (default) of maximum frequency
@@ -86,6 +86,11 @@ static void cs_check_cpu(int cpu, unsigned int load)
 			CPUFREQ_RELATION_H);
 		return;
 	}
+
+	/* if sampling_down_factor is active break out early */
+	if (++dbs_info->down_skip < cs_tuners->sampling_down_factor)
+		return;
+	dbs_info->down_skip = 0;
 
 	/*
 	 * The optimal frequency is the frequency that is the lowest that can
