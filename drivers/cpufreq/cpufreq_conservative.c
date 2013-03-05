@@ -88,16 +88,12 @@ static void cs_check_cpu(int cpu, unsigned int load)
 	}
 
 	/* if sampling_down_factor is active break out early */
-	if (++dbs_info->down_skip < cs_tuners->sampling_down_factor)
+	if (++dbs_info->down_skip < cs_tuners.sampling_down_factor)
 		return;
 	dbs_info->down_skip = 0;
 
-	/*
-	 * The optimal frequency is the frequency that is the lowest that can
-	 * support the current CPU usage without triggering the up policy. To be
-	 * safe, we focus 10 points under the threshold.
-	 */
-	if (load < (cs_tuners.down_threshold - 10)) {
+	/* Check for frequency decrease */
+	if (load < cs_tuners.down_threshold) {
 		/*
 		 * if we cannot reduce the frequency anymore, break out early
 		 */
