@@ -726,6 +726,49 @@ static struct cpufreq_driver acpi_cpufreq_driver = {
 	.attr		= acpi_cpufreq_attr,
 };
 
+static void __init acpi_cpufreq_boost_init(void)
+{
+	if (boot_cpu_has(X86_FEATURE_CPB) || boot_cpu_has(X86_FEATURE_IDA)) {
+		msrs = msrs_alloc();
+
+		if (!msrs)
+			return;
+
+		boost_supported = true;
+		boost_enabled = boost_state(0);
+
+		get_online_cpus();
+
+		/* Force all MSRs to the same value */
+		boost_set_msrs(boost_enabled, cpu_online_mask);
+
+		register_cpu_notifier(&boost_nb);
+
+		put_online_cpus();
+	} else
+		global_boost.attr.mode = 0444;
+
+	/* We create the boost file in any case, though for systems without
+	 * hardware support it will be read-only and hardwired to return 0.
+	 */
+	if (cpufreq_sysfs_create_file(&(global_boost.attr)))
+		pr_warn(PFX "could not register global boost sysfs file\n");
+	else
+		pr_debug("registered global boost sysfs file\n");
+}
+
+static void __exit acpi_cpufreq_boost_exit(void)
+{
+	cpufreq_sysfs_remove_file(&(global_boost.attr));
+
+	if (msrs) {
+		unregister_cpu_notifier(&boost_nb);
+
+		msrs_free(msrs);
+		msrs = NULL;
+	}
+}
+
 static int __init acpi_cpufreq_init(void)
 {
 	int ret;
