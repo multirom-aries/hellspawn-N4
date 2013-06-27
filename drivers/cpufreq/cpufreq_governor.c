@@ -272,6 +272,7 @@ unlock:
 
 		mutex_lock(&dbs_data->mutex);
 		mutex_destroy(&cpu_cdbs->timer_mutex);
+		cpu_cdbs->cur_policy = NULL;
 
 		if (policy->governor->initialized == 1) {
 			sysfs_remove_group(cpufreq_global_kobject,
