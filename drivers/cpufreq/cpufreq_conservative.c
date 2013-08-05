@@ -38,7 +38,7 @@ static struct cs_dbs_tuners cs_tuners = {
 	.up_threshold = DEF_FREQUENCY_UP_THRESHOLD,
 	.down_threshold = DEF_FREQUENCY_DOWN_THRESHOLD,
 	.sampling_down_factor = DEF_SAMPLING_DOWN_FACTOR,
-	.ignore_nice = 0,
+	.ignore_nice_load = 0,
 	.freq_step = 5,
 };
 
@@ -230,10 +230,10 @@ static ssize_t store_ignore_nice_load(struct kobject *a, struct attribute *b,
 	if (input > 1)
 		input = 1;
 
-	if (input == cs_tuners.ignore_nice) /* nothing to do */
+	if (input == cs_tuners.ignore_nice_load) /* nothing to do */
 		return count;
 
-	cs_tuners.ignore_nice = input;
+	cs_tuners.ignore_nice_load = input;
 
 	/* we need to re-evaluate prev_cpu_idle */
 	for_each_online_cpu(j) {
@@ -241,7 +241,7 @@ static ssize_t store_ignore_nice_load(struct kobject *a, struct attribute *b,
 		dbs_info = &per_cpu(cs_cpu_dbs_info, j);
 		dbs_info->cdbs.prev_cpu_idle = get_cpu_idle_time(j,
 					&dbs_info->cdbs.prev_cpu_wall, 0);
-		if (cs_tuners.ignore_nice)
+		if (cs_tuners.ignore_nice_load)
 			dbs_info->cdbs.prev_cpu_nice =
 				kcpustat_cpu(j).cpustat[CPUTIME_NICE];
 	}
@@ -273,7 +273,7 @@ show_one(cs, sampling_rate, sampling_rate);
 show_one(cs, sampling_down_factor, sampling_down_factor);
 show_one(cs, up_threshold, up_threshold);
 show_one(cs, down_threshold, down_threshold);
-show_one(cs, ignore_nice_load, ignore_nice);
+show_one(cs, ignore_nice_load, ignore_nice_load);
 show_one(cs, freq_step, freq_step);
 
 define_one_global_rw(sampling_rate);

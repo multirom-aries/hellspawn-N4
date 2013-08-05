@@ -70,13 +70,13 @@ void dbs_check_cpu(struct dbs_data *dbs_data, int cpu)
 	struct cs_dbs_tuners *cs_tuners = dbs_data->tuners;
 	struct cpufreq_policy *policy;
 	unsigned int max_load = 0;
-	unsigned int ignore_nice;
+	unsigned int ignore_nice_load;
 	unsigned int j;
 
 	if (dbs_data->governor == GOV_ONDEMAND)
-		ignore_nice = od_tuners->ignore_nice;
+		ignore_nice_load = od_tuners->ignore_nice_load;
 	else
-		ignore_nice = cs_tuners->ignore_nice;
+		ignore_nice_load = cs_tuners->ignore_nice_load;
 
 	policy = cdbs->cur_policy;
 
@@ -108,7 +108,7 @@ void dbs_check_cpu(struct dbs_data *dbs_data, int cpu)
 			(cur_idle_time - j_cdbs->prev_cpu_idle);
 		j_cdbs->prev_cpu_idle = cur_idle_time;
 
-		if (ignore_nice) {
+		if (ignore_nice_load) {
 			u64 cur_nice;
 			unsigned long cur_nice_jiffies;
 
@@ -171,7 +171,7 @@ int cpufreq_governor_dbs(struct dbs_data *dbs_data,
 	struct od_dbs_tuners *od_tuners = dbs_data->tuners;
 	struct cs_dbs_tuners *cs_tuners = dbs_data->tuners;
 	struct cpu_dbs_common_info *cpu_cdbs;
-	unsigned int *sampling_rate, latency, ignore_nice, j, cpu = policy->cpu;
+	unsigned int *sampling_rate, latency, ignore_nice_load, j, cpu = policy->cpu;
 	int io_busy = 0;
 	int rc;
 
@@ -180,12 +180,12 @@ int cpufreq_governor_dbs(struct dbs_data *dbs_data,
 	if (dbs_data->governor == GOV_CONSERVATIVE) {
 		cs_dbs_info = dbs_data->get_cpu_dbs_info_s(cpu);
 		sampling_rate = &cs_tuners->sampling_rate;
-		ignore_nice = cs_tuners->ignore_nice;
+		ignore_nice_load = cs_tuners->ignore_nice_load;
 		cs_ops = dbs_data->gov_ops;
 	} else {
 		od_dbs_info = dbs_data->get_cpu_dbs_info_s(cpu);
 		sampling_rate = &od_tuners->sampling_rate;
-		ignore_nice = od_tuners->ignore_nice;
+		ignore_nice_load = od_tuners->ignore_nice_load;
 		od_ops = dbs_data->gov_ops;
 		io_busy = od_tuners->io_is_busy;
 	}
@@ -204,7 +204,7 @@ int cpufreq_governor_dbs(struct dbs_data *dbs_data,
 			j_cdbs->cur_policy = policy;
 			j_cdbs->prev_cpu_idle = get_cpu_idle_time(j,
 					       &j_cdbs->prev_cpu_wall, io_busy);
-			if (ignore_nice)
+			if (ignore_nice_load)
 				j_cdbs->prev_cpu_nice =
 					kcpustat_cpu(j).cpustat[CPUTIME_NICE];
 		}

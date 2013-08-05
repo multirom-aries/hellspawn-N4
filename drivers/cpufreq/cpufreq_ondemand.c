@@ -49,7 +49,7 @@ static struct od_dbs_tuners od_tuners = {
 	.sampling_down_factor = DEF_SAMPLING_DOWN_FACTOR,
 	.adj_up_threshold = DEF_FREQUENCY_UP_THRESHOLD -
 			    DEF_FREQUENCY_DOWN_DIFFERENTIAL,
-	.ignore_nice = 0,
+	.ignore_nice_load = 0,
 	.powersave_bias = 0,
 };
 
@@ -402,10 +402,10 @@ static ssize_t store_ignore_nice_load(struct kobject *a, struct attribute *b,
 	if (input > 1)
 		input = 1;
 
-	if (input == od_tuners.ignore_nice) { /* nothing to do */
+	if (input == od_tuners.ignore_nice_load) { /* nothing to do */
 		return count;
 	}
-	od_tuners.ignore_nice = input;
+	od_tuners.ignore_nice_load = input;
 
 	/* we need to re-evaluate prev_cpu_idle */
 	for_each_online_cpu(j) {
@@ -413,7 +413,7 @@ static ssize_t store_ignore_nice_load(struct kobject *a, struct attribute *b,
 		dbs_info = &per_cpu(od_cpu_dbs_info, j);
 		dbs_info->cdbs.prev_cpu_idle = get_cpu_idle_time(j,
 			&dbs_info->cdbs.prev_cpu_wall, od_tuners.io_is_busy);
-		if (od_tuners.ignore_nice)
+		if (od_tuners.ignore_nice_load)
 			dbs_info->cdbs.prev_cpu_nice =
 				kcpustat_cpu(j).cpustat[CPUTIME_NICE];
 
@@ -443,7 +443,7 @@ show_one(od, sampling_rate, sampling_rate);
 show_one(od, io_is_busy, io_is_busy);
 show_one(od, up_threshold, up_threshold);
 show_one(od, sampling_down_factor, sampling_down_factor);
-show_one(od, ignore_nice_load, ignore_nice);
+show_one(od, ignore_nice_load, ignore_nice_load);
 show_one(od, powersave_bias, powersave_bias);
 
 define_one_global_rw(sampling_rate);
