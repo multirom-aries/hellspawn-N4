@@ -951,6 +951,7 @@ static int cpufreq_add_dev(struct device *dev, struct subsys_interface *sif)
 		cpufreq_cpu_put(policy);
 		return 0;
 	}
+#endif
 
 #ifdef CONFIG_HOTPLUG_CPU
 	/* Check if this cpu was hot-unplugged earlier and has siblings */
@@ -963,7 +964,6 @@ static int cpufreq_add_dev(struct device *dev, struct subsys_interface *sif)
 		}
 	}
 	read_unlock_irqrestore(&cpufreq_driver_lock, flags);
-#endif
 #endif
 
 	if (!try_module_get(cpufreq_driver->owner)) {
