@@ -183,10 +183,6 @@ int cpufreq_governor_dbs(struct dbs_data *dbs_data,
 			}
 		}
 
-		/*
-		 * conservative does not implement micro like ondemand
-		 * governor, thus we are bound to jiffes/HZ
-		 */
 		if (dbs_data->governor == GOV_CONSERVATIVE) {
 			cs_dbs_info->down_skip = 0;
 			cs_dbs_info->enable = 1;
