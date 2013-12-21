@@ -1772,7 +1772,8 @@ static int __cpufreq_set_policy(struct cpufreq_policy *data,
 	memcpy(&policy->cpuinfo, &data->cpuinfo,
 				sizeof(struct cpufreq_cpuinfo));
 
-	if (policy->min > data->max || policy->max < data->min) {
+	if (policy->min > policy->user_policy.max
+	    || policy->max < policy->user_policy.min) {
 		ret = -EINVAL;
 		goto error_out;
 	}
