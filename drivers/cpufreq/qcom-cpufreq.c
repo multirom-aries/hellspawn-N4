@@ -317,6 +317,10 @@ static int msm_cpufreq_cpu_callback(struct notifier_block *nfb,
 {
 	unsigned int cpu = (unsigned long)hcpu;
 
+	/* Fail hotplug until cpufreq is ready to handle it */
+	if (!cpu_clk[0])
+		return NOTIFY_BAD;
+
 	switch (action) {
 	case CPU_ONLINE:
 	case CPU_ONLINE_FROZEN:
@@ -522,7 +526,7 @@ static struct cpufreq_driver msm_cpufreq_driver = {
 
 static int __init msm_cpufreq_register(void)
 {
-	int cpu;
+	int cpu, rc;
 
 	for_each_possible_cpu(cpu) {
 		mutex_init(&(per_cpu(cpufreq_suspend, cpu).suspend_mutex));
