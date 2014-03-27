@@ -44,6 +44,7 @@ uint32_t maxscroff = 1;
 /* ex max freq */
 uint32_t ex_max_freq;
 #endif
+static bool hotplug_ready;
 
 struct cpufreq_work_struct {
 	struct work_struct work;
@@ -333,8 +334,8 @@ static int msm_cpufreq_cpu_callback(struct notifier_block *nfb,
 {
 	unsigned int cpu = (unsigned long)hcpu;
 
-	/* Fail hotplug until cpufreq is ready to handle it */
-	if (!cpu_clk[0])
+	/* Fail hotplug until this driver can get CPU clocks */
+	if (!hotplug_ready)
 		return NOTIFY_BAD;
 
 	switch (action) {
