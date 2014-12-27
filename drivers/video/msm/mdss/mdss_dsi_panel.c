@@ -17,6 +17,10 @@
 
 #include "mdss_dsi.h"
 
+#ifdef CONFIG_POWERSUSPEND
+#include <linux/powersuspend.h>
+#endif
+
 #define DT_CMD_HDR 6
 
 static struct dsi_buf dsi_panel_tx_buf;
@@ -45,6 +49,10 @@ static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 		return -EINVAL;
 	}
 
+#ifdef CONFIG_POWERSUSPEND
+	set_power_suspend_state_panel_hook(POWER_SUSPEND_INACTIVE);
+#endif
+
 	return 0;
 }
 
@@ -55,6 +63,74 @@ static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 	mipi  = &pdata->panel_info.mipi;
 
 	pr_debug("%s:%d, debug info\n", __func__, __LINE__);
+
+#ifdef CONFIG_POWERSUSPEND
+	set_power_suspend_state_panel_hook(POWER_SUSPEND_ACTIVE);
+#endif
+
+end:
+	pinfo->blank_state = MDSS_PANEL_BLANK_BLANK;
+	pr_debug("%s:-\n", __func__);
+	return 0;
+}
+
+static int mdss_dsi_panel_low_power_config(struct mdss_panel_data *pdata,
+	int enable)
+{
+	struct mdss_dsi_ctrl_pdata *ctrl = NULL;
+	struct mdss_panel_info *pinfo;
+
+	if (pdata == NULL) {
+		pr_err("%s: Invalid input data\n", __func__);
+		return -EINVAL;
+	}
+
+	pinfo = &pdata->panel_info;
+	ctrl = container_of(pdata, struct mdss_dsi_ctrl_pdata,
+				panel_data);
+
+	pr_debug("%s: ctrl=%p ndx=%d enable=%d\n", __func__, ctrl, ctrl->ndx,
+		enable);
+
+	/* Any panel specific low power commands/config */
+	if (enable)
+		pinfo->blank_state = MDSS_PANEL_BLANK_LOW_POWER;
+	else
+		pinfo->blank_state = MDSS_PANEL_BLANK_UNBLANK;
+
+	pr_debug("%s:-\n", __func__);
+	return 0;
+}
+
+static void mdss_dsi_parse_lane_swap(struct device_node *np, char *dlane_swap)
+{
+	const char *data;
+
+	*dlane_swap = DSI_LANE_MAP_0123;
+	data = of_get_property(np, "qcom,mdss-dsi-lane-map", NULL);
+	if (data) {
+		if (!strcmp(data, "lane_map_3012"))
+			*dlane_swap = DSI_LANE_MAP_3012;
+		else if (!strcmp(data, "lane_map_2301"))
+			*dlane_swap = DSI_LANE_MAP_2301;
+		else if (!strcmp(data, "lane_map_1230"))
+			*dlane_swap = DSI_LANE_MAP_1230;
+		else if (!strcmp(data, "lane_map_0321"))
+			*dlane_swap = DSI_LANE_MAP_0321;
+		else if (!strcmp(data, "lane_map_1032"))
+			*dlane_swap = DSI_LANE_MAP_1032;
+		else if (!strcmp(data, "lane_map_2103"))
+			*dlane_swap = DSI_LANE_MAP_2103;
+		else if (!strcmp(data, "lane_map_3210"))
+			*dlane_swap = DSI_LANE_MAP_3210;
+	}
+}
+
+static void mdss_dsi_parse_trigger(struct device_node *np, char *trigger,
+		char *trigger_key)
+{
+	const char *data;
+>>>>>>> e69c47b... kernel/power/powersuspend: new PM kernel driver for Android w/o early_suspend v1.5 (faux123/Yank555.lu)
 
 	if (mipi->mode == DSI_VIDEO_MODE) {
 		mdss_dsi_cmds_tx(pdata, &dsi_panel_tx_buf, dsi_panel_off_cmds,
