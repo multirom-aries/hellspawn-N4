@@ -57,6 +57,8 @@ static void cs_check_cpu(int cpu, unsigned int load)
 	struct cpufreq_policy *policy = dbs_info->cdbs.cur_policy;
 	unsigned int freq_target;
 
+	cpufreq_notify_utilization(policy, load);
+
 	/*
 	 * break out if we 'cannot' reduce the speed as the user might
 	 * want freq_step to be zero
