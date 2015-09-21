@@ -33,15 +33,19 @@ void dbs_check_cpu(struct dbs_data *dbs_data, int cpu)
 	struct cpu_dbs_common_info *cdbs = dbs_data->get_cpu_cdbs(cpu);
 	struct od_dbs_tuners *od_tuners = dbs_data->tuners;
 	struct cs_dbs_tuners *cs_tuners = dbs_data->tuners;
+	struct ex_dbs_tuners *ex_tuners = dbs_data->tuners;
 	struct cpufreq_policy *policy;
 	unsigned int max_load = 0;
 	unsigned int ignore_nice_load;
 	unsigned int j;
 
-	if (dbs_data->governor == GOV_ONDEMAND)
+	if (dbs_data->governor == GOV_ONDEMAND) {
 		ignore_nice_load = od_tuners->ignore_nice_load;
-	else
+	} else if (dbs_data->governor == GOV_ELEMENTALX) {
+		ignore_nice_load = ex_tuners->ignore_nice_load;
+	} else {
 		ignore_nice_load = cs_tuners->ignore_nice_load;
+	}
 
 	policy = cdbs->cur_policy;
 
@@ -131,10 +135,13 @@ int cpufreq_governor_dbs(struct dbs_data *dbs_data,
 {
 	struct od_cpu_dbs_info_s *od_dbs_info = NULL;
 	struct cs_cpu_dbs_info_s *cs_dbs_info = NULL;
-	struct cs_ops *cs_ops = NULL;
+	struct ex_cpu_dbs_info_s *ex_dbs_info = NULL;
 	struct od_ops *od_ops = NULL;
+	struct cs_ops *cs_ops = NULL;
+	struct ex_ops *ex_ops = NULL;
 	struct od_dbs_tuners *od_tuners = dbs_data->tuners;
 	struct cs_dbs_tuners *cs_tuners = dbs_data->tuners;
+	struct ex_dbs_tuners *ex_tuners = NULL;
 	struct cpu_dbs_common_info *cpu_cdbs;
 	unsigned int *sampling_rate, latency, ignore_nice_load, j, cpu = policy->cpu;
 	int io_busy = 0;
@@ -147,6 +154,11 @@ int cpufreq_governor_dbs(struct dbs_data *dbs_data,
 		sampling_rate = &cs_tuners->sampling_rate;
 		ignore_nice_load = cs_tuners->ignore_nice_load;
 		cs_ops = dbs_data->gov_ops;
+	} else if (dbs_data->governor == GOV_ELEMENTALX) {
+		ex_tuners = dbs_data->tuners;
+		ex_dbs_info = dbs_data->get_cpu_dbs_info_s(cpu);
+		sampling_rate = ex_tuners->sampling_rate;
+		ignore_nice_load = ex_tuners->ignore_nice_load;
 	} else {
 		od_dbs_info = dbs_data->get_cpu_dbs_info_s(cpu);
 		sampling_rate = &od_tuners->sampling_rate;
@@ -196,6 +208,8 @@ int cpufreq_governor_dbs(struct dbs_data *dbs_data,
 					MIN_SAMPLING_RATE_RATIO *
 					jiffies_to_usecs(10);
 			}
+		} else if (dbs_data->governor == GOV_ELEMENTALX) {
+			ex_dbs_info->enable = 1;
 		} else {
 			od_dbs_info->rate_mult = 1;
 			od_dbs_info->sample_type = OD_NORMAL_SAMPLE;
@@ -228,6 +242,9 @@ unlock:
 	case CPUFREQ_GOV_STOP:
 		if (dbs_data->governor == GOV_CONSERVATIVE)
 			cs_dbs_info->enable = 0;
+
+		if (dbs_data->governor == GOV_ELEMENTALX)
+			ex_dbs_info->enable = 0;
 
 		dbs_timer_exit(cpu_cdbs);
 
