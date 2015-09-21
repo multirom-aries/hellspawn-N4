@@ -540,6 +540,10 @@ struct kgsl_cff_syncmem {
  * _IOWR to support fences which need to return a fd for the priv parameter.
  */
 
+#ifdef CONFIG_CPU_FREQ_GOV_ELEMENTALX
+extern int graphics_boost;
+#endif
+
 struct kgsl_timestamp_event {
 	int type;                /* Type of event (see list below) */
 	unsigned int timestamp;  /* Timestamp to trigger event on */
