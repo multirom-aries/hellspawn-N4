@@ -166,7 +166,7 @@ static inline void dbs_timer_init(struct dbs_data *dbs_data,
 {
 	int delay = delay_for_sampling_rate(sampling_rate);
 
-	INIT_DEFERRABLE_WORK(&cdbs->work, dbs_data->gov_dbs_timer);
+	INIT_DELAYED_WORK(&cdbs->work, dbs_data->gov_dbs_timer);
 	schedule_delayed_work_on(cdbs->cpu, &cdbs->work, delay);
 }
 
