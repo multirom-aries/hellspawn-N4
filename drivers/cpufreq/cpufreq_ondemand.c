@@ -40,6 +40,10 @@
 static struct dbs_data od_dbs_data;
 static DEFINE_PER_CPU(struct od_cpu_dbs_info_s, od_cpu_dbs_info);
 
+#ifndef CONFIG_CPU_FREQ_DEFAULT_GOV_ONDEMAND
+static struct cpufreq_governor cpufreq_gov_ondemand;
+#endif
+
 static struct od_dbs_tuners od_tuners = {
 	.up_threshold = DEF_FREQUENCY_UP_THRESHOLD,
 	.sampling_down_factor = DEF_SAMPLING_DOWN_FACTOR,
@@ -234,7 +238,8 @@ static void od_timer_update(struct od_cpu_dbs_info_s *dbs_info, bool sample,
 			dbs_info->sample_type = OD_SUB_SAMPLE;
 			delay = dbs_info->freq_hi_jiffies;
 		} else {
-			delay = delay_for_sampling_rate(dbs_info->rate_mult);
+			delay = delay_for_sampling_rate(od_tuners.sampling_rate
+						* dbs_info->rate_mult);
 		}
 	}
 
@@ -317,6 +322,10 @@ static void update_sampling_rate(unsigned int new_rate)
 		policy = cpufreq_cpu_get(cpu);
 		if (!policy)
 			continue;
+		if (policy->governor != &cpufreq_gov_ondemand) {
+			cpufreq_cpu_put(policy);
+			continue;
+		}
 		dbs_info = &per_cpu(od_cpu_dbs_info, policy->cpu);
 		cpufreq_cpu_put(policy);
 
