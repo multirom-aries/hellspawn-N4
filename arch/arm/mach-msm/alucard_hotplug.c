@@ -22,7 +22,7 @@
 #include <linux/mutex.h>
 #include <linux/module.h>
 #include <linux/slab.h>
-#include "acpuclock.h"
+#include <soc/qcom/acpuclock.h>
 
 #if defined(CONFIG_POWERSUSPEND)
 #include <linux/powersuspend.h>

@@ -21,7 +21,7 @@
 #include <mach/msm-krait-l2-accessors.h>
 #include <mach/msm_iomap.h>
 #include <asm/cputype.h>
-#include "acpuclock.h"
+#include <soc/qcom/acpuclock.h>
 
 #define CESR_DCTPE		BIT(0)
 #define CESR_DCDPE		BIT(1)
