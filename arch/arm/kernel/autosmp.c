@@ -28,6 +28,15 @@
 #include <linux/cpumask.h>
 #include <linux/hrtimer.h>
 
+#ifdef CONFIG_POWERSUSPEND
+#include <linux/powersuspend.h>
+#endif
+
+#ifdef CONFIG_HAS_EARLYSUSPEND
+#include <linux/earlysuspend.h>
+#endif
+
+#define HOTPLUG_ENABLED 0
 #define DEBUG 0
 
 #define ASMP_TAG "AutoSMP: "
@@ -129,7 +138,12 @@ static void __cpuinit asmp_work_fn(struct work_struct *work) {
 	mod_delayed_work(asmp_workq, &asmp_work, delay_jif);
 }
 
-static void asmp_early_suspend(struct early_suspend *h) {
+#ifdef CONFIG_POWERSUSPEND
+static void asmp_early_suspend(struct power_suspend *handler)
+#else
+static void asmp_early_suspend(struct early_suspend *h) 
+#endif
+{
 	unsigned int cpu;
 
 	/* unplug online cpu cores */
@@ -145,7 +159,12 @@ static void asmp_early_suspend(struct early_suspend *h) {
 	pr_info(ASMP_TAG"suspended\n");
 }
 
-static void __cpuinit asmp_late_resume(struct early_suspend *h) {
+#ifdef CONFIG_POWERSUSPEND
+static void __ref asmp_late_resume(struct power_suspend *handler)
+#else
+static void __ref asmp_late_resume(struct early_suspend *h)
+#endif
+{
 	unsigned int cpu;
 
 	/* hotplug offline cpu cores */
@@ -165,11 +184,20 @@ static void __cpuinit asmp_late_resume(struct early_suspend *h) {
 	pr_info(ASMP_TAG"resumed\n");
 }
 
+#ifdef CONFIG_POWERSUSPEND
+static struct power_suspend asmp_power_suspend_handler = {
+	.suspend = asmp_early_suspend,
+	.resume = asmp_late_resume,
+};
+#endif  /* CONFIG_POWERSUSPEND */
+
+#ifdef CONFIG_HAS_EARLYSUSPEND
 static struct early_suspend __refdata asmp_early_suspend_handler = {
 	.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN,
 	.suspend = asmp_early_suspend,
 	.resume = asmp_late_resume,
 };
+#endif	/* CONFIG_HAS_EARLYSUSPEND */
 
 static int __cpuinit set_enabled(const char *val, const struct kernel_param *kp) {
 	int ret;
@@ -306,8 +334,12 @@ static int __init asmp_init(void) {
 	if (enabled)
 		mod_delayed_work(asmp_workq, &asmp_work,
 				   msecs_to_jiffies(ASMP_STARTDELAY));
-
+#ifdef CONFIG_POWERSUSPEND
+	register_power_suspend(&asmp_power_suspend_handler);
+#endif
+#ifdef CONFIG_HAS_EARLYSUSPEND
 	register_early_suspend(&asmp_early_suspend_handler);
+#endif
 
 	asmp_kobject = kobject_create_and_add("autosmp", kernel_kobj);
 	if (asmp_kobject) {
