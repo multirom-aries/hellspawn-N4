@@ -42,7 +42,7 @@
 #include <asm/vfp.h>
 #endif
 
-#include "acpuclock.h"
+#include <soc/qcom/acpuclock.h>
 #include "clock.h"
 #include "avs.h"
 #include <mach/cpuidle.h>

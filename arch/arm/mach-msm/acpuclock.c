@@ -12,7 +12,7 @@
 
 #include <linux/cpu.h>
 #include <linux/smp.h>
-#include "acpuclock.h"
+#include <soc/qcom/acpuclock.h>
 #include <trace/events/power.h>
 
 static struct acpuclk_data *acpuclk_data;

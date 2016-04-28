@@ -35,7 +35,7 @@
 #include <mach/msm_bus.h>
 #include <mach/msm_dcvs.h>
 
-#include "acpuclock.h"
+#include <soc/qcom/acpuclock.h>
 #include "acpuclock-krait.h"
 #include "avs.h"
 
