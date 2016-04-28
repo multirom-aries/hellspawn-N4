@@ -569,9 +569,9 @@ static void __exit cpufreq_gov_dbs_exit(void)
 	cpufreq_unregister_governor(&cpufreq_gov_elementalx);
 }
 
-MODULE_AUTHOR("Aaron Segaert <asegaert@gmail.com>");
+/*MODULE_AUTHOR("Aaron Segaert <asegaert@gmail.com>");
 MODULE_DESCRIPTION("'cpufreq_elementalx' - multiphase cpufreq governor");
-MODULE_LICENSE("GPL");
+MODULE_LICENSE("GPL");*/
 
 #ifdef CONFIG_CPU_FREQ_DEFAULT_GOV_ELEMENTALX
 fs_initcall(cpufreq_gov_dbs_init);
