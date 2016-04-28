@@ -27,11 +27,14 @@
 #include <linux/cpumask.h>
 #include <linux/sched.h>
 #include <linux/suspend.h>
+#include <linux/clk.h>
+#include <linux/err.h>
+#include <linux/platform_device.h>
+#include <linux/of.h>
+#include <soc/qcom/cpufreq.h>
 #include <trace/events/power.h>
-#include <mach/socinfo.h>
-#include <mach/cpufreq.h>
 
-#include "acpuclock.h"
+#include <soc/qcom/acpuclock.h>
 
 #ifdef CONFIG_MSM_SLEEPER
 /* maxscroff */
@@ -269,13 +272,6 @@ static int msm_cpufreq_init(struct cpufreq_policy *policy)
 	table = cpufreq_frequency_get_table(policy->cpu);
 	if (table == NULL)
 		return -ENODEV;
-	/*
-	 * In 8625 both cpu core's frequency can not
-	 * be changed independently. Each cpu is bound to
-	 * same frequency. Hence set the cpumask to all cpu.
-	 */
-	if (cpu_is_msm8625())
-		cpumask_setall(policy->cpus);
 
 	if (cpufreq_frequency_table_cpuinfo(policy, table)) {
 		policy->cpuinfo.min_freq = 384000;

@@ -19,7 +19,7 @@
 #include <mach/msm_bus.h>
 
 #include "mach/socinfo.h"
-#include "acpuclock.h"
+#include <soc/qcom/acpuclock.h>
 #include "acpuclock-krait.h"
 
 static struct hfpll_data hfpll_data __initdata = {

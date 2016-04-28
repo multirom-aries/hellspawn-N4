@@ -18,7 +18,7 @@
 #include <linux/cpu.h>
 #include <linux/module.h>
 #include <linux/cpufreq.h>
-#include <mach/cpufreq.h>
+#include <soc/qcom/cpufreq.h>
 
 #define MSM_SLEEPER_MAJOR_VERSION	3
 #define MSM_SLEEPER_MINOR_VERSION	2
