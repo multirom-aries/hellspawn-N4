@@ -1022,7 +1022,7 @@ static void __init cpufreq_table_init(void)
 		for (i = 0; drv.acpu_freq_tbl[i].speed.khz != 0
 				&& freq_cnt < ARRAY_SIZE(*freq_table); i++) {
 			if (drv.acpu_freq_tbl[i].use_for_scaling) {
-				freq_table[cpu][freq_cnt].index = freq_cnt;
+				freq_table[cpu][freq_cnt].driver_data = freq_cnt;
 				freq_table[cpu][freq_cnt].frequency
 					= drv.acpu_freq_tbl[i].speed.khz;
 				freq_cnt++;
@@ -1031,7 +1031,7 @@ static void __init cpufreq_table_init(void)
 		/* freq_table not big enough to store all usable freqs. */
 		BUG_ON(drv.acpu_freq_tbl[i].speed.khz != 0);
 
-		freq_table[cpu][freq_cnt].index = freq_cnt;
+		freq_table[cpu][freq_cnt].driver_data = freq_cnt;
 		freq_table[cpu][freq_cnt].frequency = CPUFREQ_TABLE_END;
 
 		dev_info(drv.dev, "CPU%d: %d frequencies supported\n",
